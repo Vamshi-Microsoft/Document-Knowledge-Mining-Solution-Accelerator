@@ -104,10 +104,12 @@ jobs:
           echo "Installed helm version:"
           helm version          
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          driver: docker
+          driver-opts: |
+            image=moby/buildkit:latest
+          platforms: linux/amd64
 
       - name: Deploy using azd up and extract values (Windows)
         id: get_output_windows
