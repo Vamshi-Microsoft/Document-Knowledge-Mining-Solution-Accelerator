@@ -82,16 +82,13 @@ on:
       AZURE_ENV_OPENAI_LOCATION:
         description: "Azure OpenAI Location"
         value: ${{ jobs.azure-setup.outputs.AZURE_ENV_OPENAI_LOCATION }}
-      IMAGE_TAG:
-        description: "Docker Image Tag Used"
-        value: ${{ jobs.azure-setup.outputs.IMAGE_TAG }}
       QUOTA_FAILED:
         description: "Quota Check Failed Flag"
         value: ${{ jobs.azure-setup.outputs.QUOTA_FAILED }}
 
 env:
-  GPT_CAPACITY: 150
-  TEXT_EMBEDDING_CAPACITY: 200
+  GPT_CAPACITY: 50
+  TEXT_EMBEDDING_CAPACITY: 50
   BRANCH_NAME: ${{ github.event.workflow_run.head_branch || github.head_ref || github.ref_name }}
   WAF_ENABLED: ${{ inputs.trigger_type == 'workflow_dispatch' && (inputs.waf_enabled || false) || false }}
   EXP: ${{ inputs.trigger_type == 'workflow_dispatch' && (inputs.EXP || false) || false }}
@@ -109,7 +106,6 @@ jobs:
       ENV_NAME: ${{ steps.generate_env_name.outputs.ENV_NAME }}
       AZURE_LOCATION: ${{ steps.set_region.outputs.AZURE_LOCATION }}
       AZURE_ENV_OPENAI_LOCATION: ${{ steps.set_region.outputs.AZURE_ENV_OPENAI_LOCATION }}
-      IMAGE_TAG: ${{ steps.determine_image_tag.outputs.IMAGE_TAG }}
       QUOTA_FAILED: ${{ steps.quota_failure_output.outputs.QUOTA_FAILED }}
       
     steps:

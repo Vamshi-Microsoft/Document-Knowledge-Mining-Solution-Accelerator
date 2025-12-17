@@ -95,8 +95,8 @@ param enableScalability bool = false
   azd: {
     type: 'location'
     usageName: [
-      'OpenAI.GlobalStandard.gpt4.1-mini,150'
-      'OpenAI.GlobalStandard.text-embedding-3-large,100'
+      'OpenAI.GlobalStandard.gpt4.1-mini,50'
+      'OpenAI.GlobalStandard.text-embedding-3-large,50'
     ]
   }
 })
