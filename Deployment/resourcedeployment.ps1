@@ -82,7 +82,15 @@ function PromptForParameters {
     param(
         [string]$email
 )
-    Clear-Host
+    # Clear-Host can fail in non-interactive environments (e.g., CI/CD pipelines)
+    # Only attempt to clear if we have a valid console host
+    try {
+        if ($host.Name -eq 'ConsoleHost') {
+            Clear-Host
+        }
+    } catch {
+        # Silently ignore if Clear-Host fails in non-interactive mode
+    }
 
     # Display banner
     
