@@ -183,7 +183,7 @@ jobs:
           # Loop through each azd parameter and add to GitHub environment
           echo "Adding azd parameters to environment..."
           while IFS= read -r key; do
-            value=$(echo "$BICEP_OUTPUT" | jq -r ".[\"$key\"]")
+            value=$(echo "$BICEP_OUTPUT" | jq -r ".[\"$key\"].value")
             upper_key=$(echo "$key" | tr '[:lower:]' '[:upper:]')
             echo "$upper_key=$value" >> $GITHUB_ENV
             echo "✓ Added: $upper_key=$value"
