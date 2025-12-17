@@ -87,8 +87,8 @@ on:
         value: ${{ jobs.azure-setup.outputs.QUOTA_FAILED }}
 
 env:
-  GPT_CAPACITY: 10
-  TEXT_EMBEDDING_CAPACITY: 10
+  GPT_CAPACITY: 100
+  TEXT_EMBEDDING_CAPACITY: 200
   BRANCH_NAME: ${{ github.event.workflow_run.head_branch || github.head_ref || github.ref_name }}
   WAF_ENABLED: ${{ inputs.trigger_type == 'workflow_dispatch' && (inputs.waf_enabled || false) || false }}
   EXP: ${{ inputs.trigger_type == 'workflow_dispatch' && (inputs.EXP || false) || false }}
