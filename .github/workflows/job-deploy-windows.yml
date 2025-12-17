@@ -180,14 +180,13 @@ jobs:
           echo "Deployment outputs:"
           echo "$BICEP_OUTPUT"
 
-          # Loop through each azd parameter and add to GitHub environment
+          # Loop through each key-value pair and add to GitHub environment
           echo "Adding azd parameters to environment..."
-          while IFS= read -r key; do
-            value=$(echo "$BICEP_OUTPUT" | jq -r ".[\"$key\"].value")
+          echo "$BICEP_OUTPUT" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
             upper_key=$(echo "$key" | tr '[:lower:]' '[:upper:]')
             echo "$upper_key=$value" >> $GITHUB_ENV
             echo "✓ Added: $upper_key=$value"
-          done < <(echo "$BICEP_OUTPUT" | jq -r 'keys[]')
+          done
           
           echo "✅ All azd parameters successfully added to environment"
 
