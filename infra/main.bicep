@@ -43,7 +43,7 @@ param gptModelVersion string = '2025-04-14'
 
 @description('Optional. Capacity of the GPT model deployment:')
 @minValue(10)
-param gptModelCapacity int = 100
+param gptModelCapacity int = 10
 
 @minLength(1)
 @description('Optional. Name of the Text Embedding model to deploy:')
@@ -57,7 +57,7 @@ param embeddingModelVersion string = '1'
 
 @description('Optional. Capacity of the Text Embedding model deployment:')
 @minValue(10)
-param embeddingModelCapacity int = 100
+param embeddingModelCapacity int = 10
 
 @description('Optional: Existing Log Analytics Workspace Resource ID')
 param existingLogAnalyticsWorkspaceId string = ''
