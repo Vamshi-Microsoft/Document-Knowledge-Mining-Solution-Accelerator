@@ -39,6 +39,9 @@
       "value": {
         "solutionName": "${AZURE_ENV_NAME}"
       }
+    },
+    "aiDeploymentsLocation": {
+      "value": "${AZURE_ENV_OPENAI_LOCATION}"
     }
   }
 }
