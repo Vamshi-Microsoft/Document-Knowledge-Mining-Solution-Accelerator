@@ -163,32 +163,33 @@ jobs:
 
           # Deploy using azd up
           azd up --no-prompt
-          
           Write-Host "✅ Deployment succeeded."
 
           # Get deployment outputs using azd
           Write-Host "Extracting deployment outputs..."
-          $DEPLOY_OUTPUT = azd env get-values --output json | ConvertFrom-Json
-          Write-Host $DEPLOY_OUTPUT
-          
+          azd env get-values
+
       - name: Get Deployment Output and extract Values
         id: get_output
         shell: bash
         run: |
           set -e
           echo "Fetching deployment output..."
-          BICEP_OUTPUT=$(azd env get-values --output json | ConvertFrom-Json)
+          BICEP_OUTPUT=$(azd env get-values --output json)
 
           echo "Deployment outputs:"
           echo "$BICEP_OUTPUT"
 
-          # Write outputs to GitHub env
-          # Loop through keys, normalize to uppercase, and export
-          for key in $(echo "$BICEP_OUTPUT" | jq -r 'keys[]'); do
-            value=$(echo "$BICEP_OUTPUT" | jq -r ".[\"$key\"].value")
+          # Loop through each azd parameter and add to GitHub environment
+          echo "Adding azd parameters to environment..."
+          while IFS= read -r key; do
+            value=$(echo "$BICEP_OUTPUT" | jq -r ".[\"$key\"]")
             upper_key=$(echo "$key" | tr '[:lower:]' '[:upper:]')
             echo "$upper_key=$value" >> $GITHUB_ENV
-          done
+            echo "✓ Added: $upper_key=$value"
+          done < <(echo "$BICEP_OUTPUT" | jq -r 'keys[]')
+          
+          echo "✅ All azd parameters successfully added to environment"
 
       - name: Run Deployment Script with Input
         shell: pwsh
