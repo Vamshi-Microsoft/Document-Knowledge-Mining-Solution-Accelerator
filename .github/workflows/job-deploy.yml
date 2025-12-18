@@ -210,31 +210,50 @@ jobs:
         run: |
           echo "🔍 Checking Azure AI Search service quota for region: $AZURE_LOCATION"
           
-          # Get the current Search service quota for the selected region
-          SEARCH_QUOTA=$(az search quota show \
-            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
-            --location $AZURE_LOCATION \
-            --query "current" -o tsv 2>/dev/null || echo "0")
+          # Get the Search service usage and quota for the selected region using REST API
+          SEARCH_USAGE=$(az rest --method GET \
+            --url "https://management.azure.com/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/providers/Microsoft.Search/locations/$AZURE_LOCATION/usages?api-version=2023-11-01" \
+            -o json)
           
-          SEARCH_LIMIT=$(az search quota show \
-            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
-            --location $AZURE_LOCATION \
-            --query "limit" -o tsv 2>/dev/null || echo "0")
+          # Extract Basic tier quota
+          BASIC_CURRENT=$(echo $SEARCH_USAGE | jq -r '.value[] | select(.name.value=="basic") | .currentValue // 0')
+          BASIC_LIMIT=$(echo $SEARCH_USAGE | jq -r '.value[] | select(.name.value=="basic") | .limit // 0')
           
-          echo "Current Search services in region: $SEARCH_QUOTA"
-          echo "Search service limit in region: $SEARCH_LIMIT"
+          # Extract Standard tier quota
+          STANDARD_CURRENT=$(echo $SEARCH_USAGE | jq -r '.value[] | select(.name.value=="standard") | .currentValue // 0')
+          STANDARD_LIMIT=$(echo $SEARCH_USAGE | jq -r '.value[] | select(.name.value=="standard") | .limit // 0')
           
-          # Check if there's available quota (need at least 1 Search service)
-          AVAILABLE_QUOTA=$((SEARCH_LIMIT - SEARCH_QUOTA))
+          echo "Basic tier - Current: $BASIC_CURRENT, Limit: $BASIC_LIMIT, Available: $((BASIC_LIMIT - BASIC_CURRENT))"
+          echo "Standard tier - Current: $STANDARD_CURRENT, Limit: $STANDARD_LIMIT, Available: $((STANDARD_LIMIT - STANDARD_CURRENT))"
           
-          if [ $AVAILABLE_QUOTA -lt 1 ]; then
-            echo "❌ Insufficient Azure AI Search quota in region $AZURE_LOCATION"
-            echo "   Current: $SEARCH_QUOTA, Limit: $SEARCH_LIMIT, Available: $AVAILABLE_QUOTA"
+          # Determine which tier to check based on WAF_ENABLED
+          if [[ "${{ env.WAF_ENABLED }}" == "true" ]]; then
+            echo "WAF is enabled - checking Standard tier quota"
+            TIER_NAME="Standard"
+            TIER_CURRENT=$STANDARD_CURRENT
+            TIER_LIMIT=$STANDARD_LIMIT
+          else
+            echo "WAF is disabled - checking Basic tier quota"
+            TIER_NAME="Basic"
+            TIER_CURRENT=$BASIC_CURRENT
+            TIER_LIMIT=$BASIC_LIMIT
+          fi
+          
+          # Check tier quota
+          TIER_AVAILABLE=$((TIER_LIMIT - TIER_CURRENT))
+          
+          if [ $TIER_LIMIT -eq 0 ]; then
+            echo "⚠️ No ${TIER_NAME} tier Search service quota in region $AZURE_LOCATION"
+            echo "QUOTA_FAILED=true" >> $GITHUB_ENV
+            exit 1
+          elif [ $TIER_AVAILABLE -lt 1 ]; then
+            echo "❌ Insufficient Azure AI Search (${TIER_NAME} tier) quota in region $AZURE_LOCATION"
+            echo "   Current: $TIER_CURRENT, Limit: $TIER_LIMIT, Available: $TIER_AVAILABLE"
             echo "QUOTA_FAILED=true" >> $GITHUB_ENV
             exit 1
           else
-            echo "✅ Sufficient Azure AI Search quota available in region $AZURE_LOCATION"
-            echo "   Available quota: $AVAILABLE_QUOTA"
+            echo "✅ Sufficient Azure AI Search (${TIER_NAME} tier) quota available in region $AZURE_LOCATION"
+            echo "   Available quota: $TIER_AVAILABLE"
           fi
 
       - name: Generate Resource Group Name
