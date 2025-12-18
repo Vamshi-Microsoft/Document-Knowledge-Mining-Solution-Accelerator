@@ -338,7 +338,7 @@ jobs:
   deploy-windows:
     name: Deploy on Windows
     needs: azure-setup
-    if: inputs.runner_os == 'windows-latest' && !cancelled() && needs.azure-setup.result == 'success'
+    if: inputs.runner_os == 'ubuntu-latest' && !cancelled() && needs.azure-setup.result == 'success'
     uses: ./.github/workflows/job-deploy-windows.yml
     with:
       ENV_NAME: ${{ needs.azure-setup.outputs.ENV_NAME }}
