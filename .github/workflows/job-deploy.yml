@@ -203,6 +203,40 @@ jobs:
             echo "AZURE_LOCATION=$VALID_REGION" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check Search Service Quota
+        id: search-quota-check
+        if: env.QUOTA_FAILED != 'true'
+        shell: bash
+        run: |
+          echo "🔍 Checking Azure AI Search service quota for region: $AZURE_LOCATION"
+          
+          # Get the current Search service quota for the selected region
+          SEARCH_QUOTA=$(az search quota show \
+            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            --location $AZURE_LOCATION \
+            --query "current" -o tsv 2>/dev/null || echo "0")
+          
+          SEARCH_LIMIT=$(az search quota show \
+            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
+            --location $AZURE_LOCATION \
+            --query "limit" -o tsv 2>/dev/null || echo "0")
+          
+          echo "Current Search services in region: $SEARCH_QUOTA"
+          echo "Search service limit in region: $SEARCH_LIMIT"
+          
+          # Check if there's available quota (need at least 1 Search service)
+          AVAILABLE_QUOTA=$((SEARCH_LIMIT - SEARCH_QUOTA))
+          
+          if [ $AVAILABLE_QUOTA -lt 1 ]; then
+            echo "❌ Insufficient Azure AI Search quota in region $AZURE_LOCATION"
+            echo "   Current: $SEARCH_QUOTA, Limit: $SEARCH_LIMIT, Available: $AVAILABLE_QUOTA"
+            echo "QUOTA_FAILED=true" >> $GITHUB_ENV
+            exit 1
+          else
+            echo "✅ Sufficient Azure AI Search quota available in region $AZURE_LOCATION"
+            echo "   Available quota: $AVAILABLE_QUOTA"
+          fi
+
       - name: Generate Resource Group Name
         id: generate_rg_name
         shell: bash
