@@ -88,7 +88,7 @@ jobs:
   Run:
     uses: ./.github/workflows/deploy-orchestrator.yml
     with:
-      runner_os: windows-latest
+      runner_os: ubuntu-latest
       azure_location: ${{ github.event.inputs.azure_location || 'australiaeast' }}
       resource_group_name: ${{ github.event.inputs.resource_group_name || '' }}
       waf_enabled: ${{ github.event.inputs.waf_enabled == 'true' }}
